@@ -32,6 +32,7 @@ static int pifs_getattr(const char *path, struct stat *buf)
 {
   FULL_PATH(path);
   int ret = stat(full_path, buf);
+  buf->st_size /= 2;
   return ret == -1 ? -errno : ret;
 }
 
@@ -108,7 +109,7 @@ static int pifs_chown(const char *path, uid_t owner, gid_t group)
 static int pifs_truncate(const char *path, off_t length)
 {
   FULL_PATH(path);
-  int ret = truncate(full_path, length);
+  int ret = truncate(full_path, length * 2);
   return ret == -1 ? -errno : ret;
 }
 
@@ -130,25 +131,44 @@ static int pifs_open(const char *path, struct fuse_file_info *info)
 static int pifs_read(const char *path, char *buf, size_t count, off_t offset,
                      struct fuse_file_info *info)
 {
-  int ret = lseek(info->fh, offset, SEEK_SET);
+  int ret = lseek(info->fh, offset * 2, SEEK_SET);
   if (ret == -1) {
     return -errno;
   }
 
-  ret = read(info->fh, buf, count);
-  return ret == -1 ? -errno : ret;
+  for (size_t i = 0; i < count; i++) {
+    short index;
+    ret = read(info->fh, &index, sizeof index);
+    if (ret == -1) {
+      return -errno;
+    } else if (ret == 0) {
+      return i;
+    }
+    *buf = (char) index;
+    buf++;
+  }
+
+  return count;
 }
 
 static int pifs_write(const char *path, const char *buf, size_t count,
                       off_t offset, struct fuse_file_info *info)
 {
-  int ret = lseek(info->fh, offset, SEEK_SET);
+  int ret = lseek(info->fh, offset * 2, SEEK_SET);
   if (ret == -1) {
     return -errno;
   }
 
-  ret = write(info->fh, buf, count);
-  return ret == -1 ? -errno : ret;
+  for (size_t i = 0; i < count; i++) {
+    short index = (short) *buf;
+    ret = write(info->fh, &index, sizeof index);
+    if (ret == -1) {
+      return -errno;
+    }
+    buf++;
+  }
+
+  return count;
 }
 
 static int pifs_statfs(const char *path, struct statvfs *buf)
@@ -272,7 +292,7 @@ static int pifs_create(const char *path, mode_t mode,
 static int pifs_ftruncate(const char *path, off_t length,
                           struct fuse_file_info *info)
 {
-  int ret = ftruncate(info->fh, length);
+  int ret = ftruncate(info->fh, length * 2);
   return ret == -1 ? -errno : ret;
 }
 
