@@ -31,7 +31,7 @@ static struct fuse_opt pifs_opts[] =
 static int pifs_getattr(const char *path, struct stat *buf)
 {
   FULL_PATH(path);
-  int ret = stat(full_path, buf);
+  int ret = lstat(full_path, buf);
   buf->st_size /= 2;
   return ret == -1 ? -errno : ret;
 }
@@ -39,8 +39,13 @@ static int pifs_getattr(const char *path, struct stat *buf)
 static int pifs_readlink(const char *path, char *buf, size_t bufsiz)
 {
   FULL_PATH(path);
-  int ret = readlink(full_path, buf, bufsiz);
-  return ret == -1 ? -errno : ret;
+  int ret = readlink(full_path, buf, bufsiz - 1);
+  if (ret == -1) {
+    return -errno;
+  }
+
+  buf[ret] = '\0';
+  return 0;
 }
 
 static int pifs_mknod(const char *path, mode_t mode, dev_t dev)
@@ -326,6 +331,7 @@ static struct fuse_operations pifs_ops = {
   .readlink = pifs_readlink,
   .mknod = pifs_mknod,
   .mkdir = pifs_mkdir,
+  .rmdir = pifs_rmdir,
   .unlink = pifs_unlink,
   .symlink = pifs_symlink,
   .rename = pifs_rename,
