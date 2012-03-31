@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,6 +11,8 @@
 #include <unistd.h>
 #include <config.h>
 #include <fuse/fuse.h>
+
+unsigned char get_byte(int id);
 
 struct options {
   char *mdd;
@@ -149,7 +152,7 @@ static int pifs_read(const char *path, char *buf, size_t count, off_t offset,
     } else if (ret == 0) {
       return i;
     }
-    *buf = (char) index;
+    *buf = (char) get_byte(index);
     buf++;
   }
 
@@ -165,7 +168,12 @@ static int pifs_write(const char *path, const char *buf, size_t count,
   }
 
   for (size_t i = 0; i < count; i++) {
-    short index = (short) *buf;
+    short index;
+    for (index = 0; index < SHRT_MAX; index++) {
+      if (get_byte(index) == *buf) {
+        break;
+      }
+    }
     ret = write(info->fh, &index, sizeof index);
     if (ret == -1) {
       return -errno;
