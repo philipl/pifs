@@ -33,7 +33,7 @@ AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_FUNC_UTIME_NULL
 AC_CHECK_FUNCS([fchdir fdatasync fork ftruncate lchown memset mkdir mkfifo rmdir setxattr strdup strerror utime])
 
-AC_SUBST([EXTRA_CFLAGS], ["-Wall -Werror -Wextra"])
+AC_SUBST([EXTRA_CFLAGS], ["-Wall -Werror -Wextra -Wno-unused-parameter"])
 
 AC_CONFIG_FILES([Makefile
  src/Makefile
