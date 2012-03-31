@@ -155,11 +155,6 @@ static int pifs_statfs(const char *path, struct statvfs *buf)
   return ret == -1 ? -errno : ret;
 }
 
-static int pifs_flush(const char *path, struct fuse_file_info *info)
-{
-  return 0;
-}
-
 static int pifs_release(const char *path, struct fuse_file_info *info)
 {
   int ret = close(info->fh);
@@ -320,7 +315,6 @@ static struct fuse_operations pifs_ops = {
   .read = pifs_read,
   .write = pifs_write,
   .statfs = pifs_statfs,
-  .flush = pifs_flush,
   .release = pifs_release,
   .fsync = pifs_fsync,
   .setxattr = pifs_setxattr,
