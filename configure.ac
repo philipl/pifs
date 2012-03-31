@@ -5,9 +5,9 @@ AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
 
 # Checks for programs
-AC_PROG_CC
+AC_PROG_CC_C99
 
-# Set language to C++
+# Set language to C
 AC_LANG_C
 
 # Checks for header files
@@ -32,6 +32,8 @@ AC_FUNC_LSTAT
 AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_FUNC_UTIME_NULL
 AC_CHECK_FUNCS([fchdir fdatasync fork ftruncate lchown memset mkdir mkfifo rmdir setxattr strdup strerror utime])
+
+AC_SUBST([EXTRA_CFLAGS], ["-Wall -Werror -Wextra"])
 
 AC_CONFIG_FILES([Makefile
  src/Makefile

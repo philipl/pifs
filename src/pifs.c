@@ -5,6 +5,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/statvfs.h>
+#include <sys/xattr.h>
+#include <unistd.h>
 #include <config.h>
 #include <fuse/fuse.h>
 
@@ -151,7 +154,7 @@ static int pifs_write(const char *path, const char *buf, size_t count,
 static int pifs_statfs(const char *path, struct statvfs *buf)
 {
   FULL_PATH(path);
-  int ret = statfs(full_path, buf);
+  int ret = statvfs(full_path, buf);
   return ret == -1 ? -errno : ret;
 }
 
