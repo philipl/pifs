@@ -9,5 +9,5 @@ config.h
 config.log
 config.status
 Makefile
-pifs
+πfs
 stamp-h1

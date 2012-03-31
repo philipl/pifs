@@ -1,7 +1,7 @@
 INCLUDES = $(FUSE_CFLAGS) $(EXTRA_CFLAGS)
 
-bin_PROGRAMS=pifs
+bin_PROGRAMS=πfs
 
-pifs_SOURCES=pifs.c piqpr8.c
+__fs_SOURCES=πfs.c piqpr8.c
 
-pifs_LDADD = $(FUSE_LIBS) -lm
+__fs_LDADD = $(FUSE_LIBS) -lm
