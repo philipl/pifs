@@ -1,6 +1,7 @@
 #define FUSE_USE_VERSION 26
 #include <dirent.h>
 #include <errno.h>
+#include <libgen.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,87 +20,106 @@ static struct fuse_opt pifs_opts[] =
   PIFS_OPT_KEY("mdd=%s", mdd, 0),
 };
 
+#define FULL_PATH(path) \
+  char full_path[PATH_MAX]; \
+  snprintf(full_path, PATH_MAX, "%s%s", options.mdd, path); \
+  printf("full_path: %s\n", full_path);
+
 static int pifs_getattr(const char *path, struct stat *buf)
 {
-  int ret = stat(path, buf);
+  FULL_PATH(path);
+  int ret = stat(full_path, buf);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_readlink(const char *path, char *buf, size_t bufsiz)
 {
-  int ret = readlink(path, buf, bufsiz);
+  FULL_PATH(path);
+  int ret = readlink(full_path, buf, bufsiz);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_mknod(const char *path, mode_t mode, dev_t dev)
 {
-  int ret = mknod(path, mode, dev);
+  FULL_PATH(path);
+  int ret = mknod(full_path, mode, dev);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_mkdir(const char *path, mode_t mode)
 {
-  int ret = mkdir(path, mode | S_IFDIR);
+  FULL_PATH(path);
+  int ret = mkdir(full_path, mode | S_IFDIR);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_unlink(const char *path)
 {
-  int ret = unlink(path);
+  FULL_PATH(path);
+  int ret = unlink(full_path);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_rmdir(const char *path)
 {
-  int ret = rmdir(path);
+  FULL_PATH(path);
+  int ret = rmdir(full_path);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_symlink(const char *oldpath, const char *newpath)
 {
-  int ret = symlink(oldpath, newpath);
+  FULL_PATH(newpath);
+  int ret = symlink(oldpath, full_path);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_rename(const char *oldpath, const char *newpath)
 {
-  int ret = rename(oldpath, newpath);
+  FULL_PATH(newpath);
+  int ret = rename(oldpath, full_path);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_link(const char *oldpath, const char *newpath)
 {
-  int ret = link(oldpath, newpath);
+  FULL_PATH(newpath);
+  int ret = link(oldpath, full_path);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_chmod(const char *path, mode_t mode)
 {
-  int ret = chmod(path, mode);
+  FULL_PATH(path);
+  int ret = chmod(full_path, mode);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_chown(const char *path, uid_t owner, gid_t group)
 {
-  int ret = chown(path, owner, group);
+  FULL_PATH(path);
+  int ret = chown(full_path, owner, group);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_truncate(const char *path, off_t length)
 {
-  int ret = truncate(path, length);
+  FULL_PATH(path);
+  int ret = truncate(full_path, length);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_utime(const char *path, struct utimbuf *times)
 {
-  int ret = utime(path, times);
+  FULL_PATH(path);
+  int ret = utime(full_path, times);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_open(const char *path, struct fuse_file_info *info)
 {
-  int ret = open(path, info->flags);
+  FULL_PATH(path);
+  int ret = open(full_path, info->flags);
   info->fh = ret;
   return ret == -1 ? -errno : 0;
 }
@@ -130,7 +150,8 @@ static int pifs_write(const char *path, const char *buf, size_t count,
 
 static int pifs_statfs(const char *path, struct statvfs *buf)
 {
-  int ret = statfs(path, buf);
+  FULL_PATH(path);
+  int ret = statfs(full_path, buf);
   return ret == -1 ? -errno : ret;
 }
 
@@ -155,32 +176,37 @@ static int pifs_fsync(const char *path, int datasync,
 static int pifs_setxattr(const char *path, const char *name, const char *value,
                          size_t size, int flags)
 {
-  int ret = setxattr(path, name, value, size, flags);
+  FULL_PATH(path);
+  int ret = setxattr(full_path, name, value, size, flags);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_getxattr(const char *path, const char *name, char *value,
                          size_t size)
 {
-  int ret = getxattr(path, name, value, size);
+  FULL_PATH(path);
+  int ret = getxattr(full_path, name, value, size);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_listxattr(const char *path, char *list, size_t size)
 {
-  int ret = listxattr(path, list, size);
+  FULL_PATH(path);
+  int ret = listxattr(full_path, list, size);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_removexattr(const char *path, const char *name)
 {
-  int ret = removexattr(path, name);
+  FULL_PATH(path);
+  int ret = removexattr(full_path, name);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_opendir(const char *path, struct fuse_file_info *info)
 {
-  DIR *dir = opendir(path);
+  FULL_PATH(path);
+  DIR *dir = opendir(full_path);
   info->fh = (uint64_t) dir;
   return !dir ? -errno : 0;
 }
@@ -231,14 +257,16 @@ static int pifs_fsyncdir(const char *path, int datasync,
 
 static int pifs_access(const char *path, int mode)
 {
-  int ret = access(path, mode);
+  FULL_PATH(path);
+  int ret = access(full_path, mode);
   return ret == -1 ? -errno : ret;
 }
 
 static int pifs_create(const char *path, mode_t mode,
                        struct fuse_file_info *info)
 {
-  int ret = creat(path, mode);
+  FULL_PATH(path);
+  int ret = creat(full_path, mode);
   info->fh = ret;
   return ret == -1 ? -errno : 0;
 }
@@ -266,7 +294,12 @@ static int pifs_lock(const char *path, struct fuse_file_info *info, int cmd,
 
 static int pifs_utimens(const char *path, const struct timespec times[2])
 {
-  int ret = utimensat(0, path, times, 0);
+  DIR *dir = opendir(options.mdd);
+  if (!dir) {
+    return -errno;
+  }
+  int ret = utimensat(dirfd(dir), basename((char *) path), times, 0);
+  closedir(dir);
   return ret == -1 ? -errno : ret;
 }
 
