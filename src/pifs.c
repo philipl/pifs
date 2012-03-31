@@ -1,10 +1,23 @@
 #define FUSE_USE_VERSION 26
 #include <dirent.h>
 #include <errno.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <config.h>
 #include <fuse/fuse.h>
+
+struct options {
+  char *mdd;
+} options;
+
+/** macro to define options */
+#define PIFS_OPT_KEY(t, p, v) { t, offsetof(struct options, p), v }
+
+static struct fuse_opt pifs_opts[] =
+{
+  PIFS_OPT_KEY("mdd=%s", mdd, 0),
+};
 
 static int pifs_getattr(const char *path, struct stat *buf)
 {
@@ -296,5 +309,28 @@ static struct fuse_operations pifs_ops = {
 
 int main (int argc, char *argv[])
 {
-  return fuse_main(argc, argv, &pifs_ops, NULL);
+  int ret;
+  struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+
+  memset(&options, 0, sizeof(struct options));
+  if (fuse_opt_parse(&args, &options, pifs_opts, NULL) == -1) {
+    return -1;
+  }
+
+  if (!options.mdd) {
+    fprintf(stderr,
+            "%s: Metadata directory must be specified with -o mdd=<directory>\n",
+            argv[0]);
+    return -1;
+  }
+
+  if (access(options.mdd, R_OK | W_OK | X_OK) == -1) {
+    fprintf(stderr, "%s: Cannot access metadata directory '%s': %s\n",
+            argv[0], options.mdd, strerror(errno));
+    return -1;
+  }
+
+  ret = fuse_main(args.argc, args.argv, &pifs_ops, NULL);
+  fuse_opt_free_args(&args);
+  return ret;
 }
