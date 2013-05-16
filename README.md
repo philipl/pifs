@@ -42,7 +42,7 @@ From here, it is a small leap to see that if π contains all possible files,
 why are we wasting exabytes of space storing those files, when we could just
 look them up in π!
 
-Every file that could possible exist?
+Every file that could possibly exist?
 -------------------------------------
 
 That's right! Every file you've ever created, or anyone else has created or
