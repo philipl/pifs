@@ -69,8 +69,7 @@ So I've looked up my bytes in π, but how do I remember where they are?
 Well, you've obviously got to write them down somewhere; you could use a piece of
 paper, but remember all that storage space we saved by moving our data into π? Why
 don't we store our file locations there!?! Even better, the location of our files in
-π is metadata and as [we all know](http://araman-consulting.co.uk/2012/metadata-the-importance-of-being-found/)
-metadata is becoming more and more important in everything we do. Doesn't it feel
+π is metadata and as we all know metadata is becoming more and more important in everything we do. Doesn't it feel
 great to have generated so much metadata? Why waste time with old fashioned data
 when you can just deal with metadata, and lots of it!
 
