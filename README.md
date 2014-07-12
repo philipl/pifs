@@ -74,8 +74,8 @@ metadata is becoming more and more important in everything we do. Doesn't it fee
 great to have generated so much metadata? Why waste time with old fashioned data
 when you can just deal with metadata, and lots of it!
 
-Yeah, but what happens if lose my file locations?
--------------------------------------------------
+Yeah, but what happens if I lose my file locations?
+---------------------------------------------------
 
 No problem, the locations are just metadata! Your files are still there, sitting
 in π - they're never going away, are they?
