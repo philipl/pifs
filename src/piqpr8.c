@@ -162,6 +162,7 @@ unsigned char get_byte(int id)
     unsigned char first = y;
     y = 16. * (y - floor (y));
     unsigned char second = y;
+    free(data);
     return (first << 4) | second;
 }
 
