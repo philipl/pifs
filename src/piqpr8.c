@@ -130,7 +130,7 @@ void ts4(struct data* data) {
 unsigned char get_byte(int id)
 {
 
-    struct data* data = malloc(sizeof(struct data));
+    struct data* data = alloca(sizeof(struct data));
     data->id = id;
 
     pthread_t t1;
@@ -162,7 +162,6 @@ unsigned char get_byte(int id)
     unsigned char first = y;
     y = 16. * (y - floor (y));
     unsigned char second = y;
-    free(data);
     return (first << 4) | second;
 }
 
