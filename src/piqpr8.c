@@ -23,7 +23,7 @@ static double expm (double p, double ak)
 
 {
   int i, j;
-  double p1, pt, r;
+  double pt, r;
 #define ntp 25
   static double tp[ntp];
   static int tp1 = 0;
@@ -42,16 +42,15 @@ static double expm (double p, double ak)
   for (i = 0; i < ntp; i++) if (tp[i] > p) break;
 
   pt = tp[i-1];
-  p1 = p;
   r = 1.;
 
 /*  Perform binary exponentiation algorithm modulo ak. */
 
   for (j = 1; j <= i; j++){
-    if (p1 >= pt){
+    if (p >= pt){
       r = 16. * r;
       r = r - (int) (r / ak) * ak;
-      p1 = p1 - pt;
+      p = p - pt;
     }
     pt = 0.5 * pt;
     if (pt >= 1.){
