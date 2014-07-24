@@ -37,8 +37,6 @@ static double expm (double p, double ak)
     for (i = 1; i < ntp; i++) tp[i] = 2. * tp[i-1];
   }
 
-  if (ak == 1.) return 0.;
-
 /*  Find the greatest power of two less than or equal to p. */
 
   for (i = 0; i < ntp; i++) if (tp[i] > p) break;
@@ -81,6 +79,7 @@ static double series (int m, int id)
 
   for (k = 0; k < id; k++){
     ak = 8 * k + m;
+    if ((int) ak == 1) continue;
     p = id - k;
     t = expm (p, ak);
     s = s + t / ak;
