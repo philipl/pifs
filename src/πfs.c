@@ -22,12 +22,14 @@
 #include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/statvfs.h>
 #include <sys/xattr.h>
 #include <unistd.h>
 #include <config.h>
 #include <fuse/fuse.h>
+#include <stdarg.h>
 
 unsigned char get_byte(int id);
 
@@ -47,6 +49,83 @@ static struct fuse_opt pifs_opts[] =
   char full_path[PATH_MAX]; \
   snprintf(full_path, PATH_MAX, "%s%s", options.mdd, path); \
   printf("full_path: %s\n", full_path);
+
+//#define DEBUG
+
+#ifdef DEBUG
+  #define DBG(fmt, arg...) pifs_log("%s:%d "fmt"\n",__func__,__LINE__,##arg)
+#else
+  #define DBG(fmt, arg...)
+#endif
+
+int pifs_log(const char* fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+
+  FILE *fp;
+  fp = fopen("/tmp/pifs.log", "a+");
+  if (fp != NULL) {
+    vfprintf(fp, fmt, ap);
+    fclose(fp);
+  }
+  va_end(ap);
+  return 0;
+}
+
+#define BA_SIZE 20 //Buffer allocator size
+
+struct bufalloc {
+  int size;
+  short* index;
+  char* set;
+} balloc = {0, NULL, NULL};
+
+static int bufalloc_new(void)
+{
+  DBG("");
+  balloc.size = BA_SIZE;
+  balloc.index = malloc(sizeof(short)*BA_SIZE);
+  if (!balloc.index)
+    return -1;
+  balloc.set = malloc(sizeof(int)*BA_SIZE);
+  if (!balloc.set)
+    return -1;
+  DBG("");
+  return 0;
+}
+
+static void bufalloc_init(void)
+{
+  int i;
+  for(i = 0; i < BA_SIZE; i++) {
+    balloc.set[i] = 0;
+  }
+}
+
+static void bufalloc_del(void)
+{
+  DBG("");
+  balloc.size = 0;
+  if (balloc.index)
+    free(balloc.index);
+  if (balloc.set)
+    free(balloc.set);
+  DBG("");
+}
+
+static int bufalloc_set(const char *buf, int len, char ch, short index)
+{
+  int i, ret = 0;;
+  for(i = 0; i < len; i++) {
+    if (balloc.set[i] == 0 && buf[i] == ch) {
+      balloc.index[i] = index;
+      balloc.set[i] = 1;
+      ret += 1;
+    }
+  }
+  return ret;
+}
 
 static int pifs_getattr(const char *path, struct stat *buf)
 {
@@ -184,19 +263,33 @@ static int pifs_write(const char *path, const char *buf, size_t count,
     return -errno;
   }
 
-  for (size_t i = 0; i < count; i++) {
+  if( bufalloc_new() < 0 ) return -1;
+
+  int balloc_len = 0, balloc_fil = 0;
+  for (size_t i = 0; i < count; i+=BA_SIZE) {
+    if ((count-i)>BA_SIZE)
+      balloc_len = BA_SIZE;
+    else
+      balloc_len = count-i;
+
+    bufalloc_init();
+    balloc_fil = 0;
+
     short index;
     for (index = 0; index < SHRT_MAX; index++) {
-      if (get_byte(index) == *buf) {
+      balloc_fil += bufalloc_set(buf, balloc_len, get_byte(index), index);
+      if (balloc_fil == balloc_len) {
         break;
       }
     }
-    ret = write(info->fh, &index, sizeof index);
+    ret = write(info->fh, balloc.index, sizeof(index)*balloc_len);
     if (ret == -1) {
       return -errno;
     }
-    buf++;
+    buf += balloc_len;
   }
+
+  bufalloc_del();
 
   return count;
 }
