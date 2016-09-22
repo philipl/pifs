@@ -99,6 +99,73 @@ static double series (int m, int id)
   return s;
 }
 
+struct data {
+    double s1;
+    double s2;
+    double s3;
+    double s4;
+    int id;
+};
+
+void ts1(struct data* data) {
+    double rv = series (1, data->id);
+    data->s1 = rv;
+}
+
+void ts2(struct data* data) {
+    double rv = series (4, data->id);
+    data->s2 = rv;
+}
+
+void ts3(struct data* data) {
+    double rv = series (5, data->id);
+    data->s3 = rv;
+}
+
+void ts4(struct data* data) {
+    double rv = series (6, data->id);
+    data->s4 = rv;
+}
+
+unsigned char get_byte(int id)
+{
+
+    struct data* data = alloca(sizeof(struct data));
+    data->id = id;
+
+    pthread_t t1;
+    pthread_create(&t1, NULL, (void*(*)(void*)) ts1, data);
+
+    pthread_t t2;
+    pthread_create(&t2, NULL, (void*(*)(void*)) ts2, data);
+
+    pthread_t t3;
+    pthread_create(&t3, NULL, (void*(*)(void*)) ts3, data);
+
+    pthread_t t4;
+    pthread_create(&t4, NULL, (void*(*)(void*)) ts4, data);
+
+    void* tmp;
+    pthread_join(t1, &tmp);
+
+    pthread_join(t2, &tmp);
+
+    pthread_join(t3, &tmp);
+
+    pthread_join(t4, &tmp);
+
+    double pid = 4. * data->s1 - 2. * data->s2 - data->s3 - data->s4;
+    pid = pid - (int) pid + 1.;
+
+    double y = fabs(pid);
+    y = 16. * (y - floor (y));
+    unsigned char first = y;
+    y = 16. * (y - floor (y));
+    unsigned char second = y;
+    return (first << 4) | second;
+}
+
+/*
 unsigned char get_byte(int id)
 {
   double s1 = series (1, id);
@@ -115,5 +182,5 @@ unsigned char get_byte(int id)
   unsigned char second = y;
   return (first << 4) | second;
 }
-
+*/
 
