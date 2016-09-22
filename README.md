@@ -61,7 +61,7 @@ always there!
 But how do I look up my data in π?
 ----------------------------------
 
-As long as you know the index into π of your file and its length, its a
+As long as you know the index into π of your file and its length, it's a
 simple task to extract the file using the [Bailey–Borwein–Plouffe formula](http://en.wikipedia.org/wiki/BBP-type_formula)
 Similarly, you can use the formula to initially find the index of your file
 
