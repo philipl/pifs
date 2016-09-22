@@ -8,7 +8,16 @@ compression was impossible? You're looking at it!
 
 πfs is dead simple to build:
 
+Firstly, you must install autoconf, automake, libfuse packages in your system.
+For example, if you have Debian try:
 ```sh
+sudo apt-get install autotools-dev
+sudo apt-get install automake
+sudo apt-get install libfuse-dev
+```
+
+```sh
+./autogen.sh
 ./configure
 make
 make install
