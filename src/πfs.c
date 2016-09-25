@@ -48,6 +48,8 @@ static struct fuse_opt pifs_opts[] =
   snprintf(full_path, PATH_MAX, "%s%s", options.mdd, path); \
   printf("full_path: %s\n", full_path);
 
+#define WBUF_SIZE 40
+
 static int pifs_getattr(const char *path, struct stat *buf)
 {
   FULL_PATH(path);
@@ -183,19 +185,40 @@ static int pifs_write(const char *path, const char *buf, size_t count,
   if (ret == -1) {
     return -errno;
   }
+  short wbuf[WBUF_SIZE];
+  int wbuf_len, wbuf_fill;
 
-  for (size_t i = 0; i < count; i++) {
+  for (size_t i = 0; i < count; i += WBUF_SIZE) {
+    if ((count-i) > WBUF_SIZE) {
+      wbuf_len = WBUF_SIZE;
+    } else {
+      wbuf_len = count-i;
+    }
+
+    int k;
+    for (k = 0; k < wbuf_len; k++) {
+      wbuf[k] = -1;
+    }
+    wbuf_fill = 0;
+
     short index;
     for (index = 0; index < SHRT_MAX; index++) {
-      if (get_byte(index) == *buf) {
+      char ch = get_byte(index);
+      for (k = 0; k < wbuf_len; k++) {
+        if (wbuf[k] < 0 && buf[k] == ch) {
+          wbuf[k] = index;
+          wbuf_fill++;
+        }
+      }
+      if (wbuf_fill == wbuf_len) {
         break;
       }
     }
-    ret = write(info->fh, &index, sizeof index);
+    ret = write(info->fh, wbuf, sizeof(index) * wbuf_len);
     if (ret == -1) {
       return -errno;
     }
-    buf++;
+    buf += wbuf_len;
   }
 
   return count;

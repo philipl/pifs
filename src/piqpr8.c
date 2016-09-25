@@ -15,45 +15,26 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <limits.h>
 
-static double expm (double p, double ak)
+static double expm (double p, double ak, int i, double pt)
 
 /*  expm = 16^p mod ak.  This routine uses the left-to-right binary 
     exponentiation scheme. */
 
 {
-  int i, j;
-  double p1, pt, r;
-#define ntp 25
-  static double tp[ntp];
-  static int tp1 = 0;
+  int j;
+  double r;
 
-/*  If this is the first call to expm, fill the power of two table tp. */
-
-  if (tp1 == 0) {
-    tp1 = 1;
-    tp[0] = 1.;
-
-    for (i = 1; i < ntp; i++) tp[i] = 2. * tp[i-1];
-  }
-
-  if (ak == 1.) return 0.;
-
-/*  Find the greatest power of two less than or equal to p. */
-
-  for (i = 0; i < ntp; i++) if (tp[i] > p) break;
-
-  pt = tp[i-1];
-  p1 = p;
   r = 1.;
 
 /*  Perform binary exponentiation algorithm modulo ak. */
 
   for (j = 1; j <= i; j++){
-    if (p1 >= pt){
+    if (p >= pt){
       r = 16. * r;
       r = r - (int) (r / ak) * ak;
-      p1 = p1 - pt;
+      p = p - pt;
     }
     pt = 0.5 * pt;
     if (pt >= 1.){
@@ -65,7 +46,7 @@ static double expm (double p, double ak)
   return r;
 }
 
-static double series (int m, int id)
+static double series (int m, int id, int i, double pt)
 
 /*  This routine evaluates the series  sum_k 16^(id-k)/(8*k+m) 
     using the modular exponentiation technique. */
@@ -81,8 +62,13 @@ static double series (int m, int id)
 
   for (k = 0; k < id; k++){
     ak = 8 * k + m;
+    if ((int) ak == 1) continue;
     p = id - k;
-    t = expm (p, ak);
+    if(! ((int) pt & (int) p)){
+      i--;
+      pt = 1 << (i - 1);
+    }
+    t = expm (p, ak, i, pt);
     s = s + t / ak;
     s = s - (int) s;
   }
@@ -101,10 +87,24 @@ static double series (int m, int id)
 
 unsigned char get_byte(int id)
 {
-  double s1 = series (1, id);
-  double s2 = series (4, id);
-  double s3 = series (5, id);
-  double s4 = series (6, id);
+  int id_pow2;
+  double id_val2;
+
+  #if defined(__GNUC__)
+    id_pow2 = CHAR_BIT * sizeof (int) - __builtin_clz (id);
+  #else
+    {
+      int tid = id;
+      id_pow2 = 1;
+      while (tid >>= 1) id_pow2++;
+    }
+  #endif
+  id_val2 = 1 << (id_pow2 - 1);
+
+  double s1 = series (1, id, id_pow2, id_val2);
+  double s2 = series (4, id, id_pow2, id_val2);
+  double s3 = series (5, id, id_pow2, id_val2);
+  double s4 = series (6, id, id_pow2, id_val2);
   double pid = 4. * s1 - 2. * s2 - s3 - s4;
   pid = pid - (int) pid + 1.;
 
