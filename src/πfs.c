@@ -176,6 +176,7 @@ static int pifs_read(const char *path, char *buf, size_t count, off_t offset,
   return count;
 }
 
+static unsigned short bytesIndices[256] = {0};
 static int pifs_write(const char *path, const char *buf, size_t count,
                       off_t offset, struct fuse_file_info *info)
 {
@@ -185,13 +186,7 @@ static int pifs_write(const char *path, const char *buf, size_t count,
   }
 
   for (size_t i = 0; i < count; i++) {
-    short index;
-    for (index = 0; index < SHRT_MAX; index++) {
-      if (get_byte(index) == *buf) {
-        break;
-      }
-    }
-    ret = write(info->fh, &index, sizeof index);
+    ret = write(info->fh, &bytesIndices[(unsigned char)*buf], sizeof(unsigned short));
     if (ret == -1) {
       return -errno;
     }
@@ -271,7 +266,7 @@ static int pifs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
   do {
     errno = 0;
     struct dirent *de = readdir(dir);
-    if (!de) { 
+    if (!de) {
       if (errno) {
         return -errno;
       } else {
@@ -390,6 +385,18 @@ static struct fuse_operations pifs_ops = {
 
 int main (int argc, char *argv[])
 {
+  int found = 0;
+  for(unsigned short i = 1; i < USHRT_MAX; i++)
+  {
+    unsigned char val = get_byte(i);
+    if(bytesIndices[val] == 0)
+    {
+      bytesIndices[val] = i;
+      if(++found == 256)
+        break;
+    }
+  }
+
   int ret;
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 
