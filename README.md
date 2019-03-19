@@ -92,7 +92,7 @@ in π - they're never going away, are they?
 Why is this thing so slow? It took me five minutes to store a 400 line text file!
 ---------------------------------------------------------------------------------
 
-Well, this is just an initial prototype, and don't worry, there's always Moore's law!
+Well, this is just an initial prototype, and don't worry, there's a faster version somewhere in π.
 
 Where do we go from here?
 -------------------------
