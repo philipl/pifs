@@ -103,6 +103,11 @@ Where do we go from here?
 There's lots of potential for the future!
 
 * Variable run length search and lookup!
+* [Phase-sector index for locating longer sequences in π](docs/phase-sector-index-theory.md)!
+* [Sector transform matrices for translating targets between phase grids](docs/sector-transform-matrices.md)!
+* [Proportional sector arithmetic for exact cross-grid certificates](docs/proportional-sector-arithmetic.md)!
+* [Finite matrix-sector locate engine](docs/finite-locate-engine.md)!
+* [Spiral embedding and resonance arms for candidate generation](docs/spiral-phase-embedding.md)!
 * Arithmetic Coding!
 * Parallelizable lookup!
 * Cloud based π lookup!
